@@ -4,9 +4,13 @@ import pandas as pd
 
 video_path = '/mnt/d/Temp/32440300100L1AC01-1157/session-1653542024-1.mp4'
 
-# cap = cv2.VideoCapture(video_path)
-# fps = cap.get(cv2.CAP_PROP_FPS)
-# print(fps)
+def get_location_from_timestamp(timestamp):
+    for index, row in df.iterrows():
+        point_timestamp = int(row['timestamp'])
+        if(point_timestamp >= timestamp):
+            return row
+        # else:
+            # print(row['timestamp'])
 
 timestamp_start = 1653542025000
 dt_start = datetime.fromtimestamp(timestamp_start / 1000)
@@ -32,10 +36,16 @@ print('video last timestamp ' + str(round(video_last_timestamp.timestamp() * 100
 
 
 df = pd.read_csv('./location.csv')
-for index, row in df.iterrows():
-    point_timestamp = int(row['timestamp'])
-    if(point_timestamp >= timestamp_start and point_timestamp <= timestamp_stop):
-        print(point_timestamp)
+
+while(cap.isOpened()):
+    frame_exists, curr_frame = cap.read()
+    if frame_exists:
+        frame_timestamps = round(timestamp_start + cap.get(cv2.CAP_PROP_POS_MSEC)) 
+        location = get_location_from_timestamp(frame_timestamps)
+        print(str(frame_timestamps) + ' => ' + str(location['latitude']) +',' + str(location['longitude']))
+
+    else:
+        break
 
 cap.release()
 
