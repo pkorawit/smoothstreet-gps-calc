@@ -36,19 +36,31 @@ print('video last timestamp ' + str(round(video_last_timestamp.timestamp() * 100
 
 
 df = pd.read_csv('./location.csv')
+dt = pd.read_csv('./detect.csv')
+detected_lat = []
+detected_lng = []
 
 while(cap.isOpened()):
     frame_exists, curr_frame = cap.read()
     if frame_exists:
+        frame_number = cap.get(cv2.CAP_PROP_POS_FRAMES)
+
+        if frame_number > dt.iloc[-1]['frame']:
+            break
+
         frame_timestamps = round(timestamp_start + cap.get(cv2.CAP_PROP_POS_MSEC)) 
         location = get_location_from_timestamp(frame_timestamps)
-        print(str(frame_timestamps) + ' => ' + str(location['latitude']) +',' + str(location['longitude']))
-
+        result = dt.loc[dt['frame'] == frame_number] 
+        if not result.empty:
+            print(str(int(frame_number)) + ': ' + str(frame_timestamps) + ' => ' + str(location['latitude']) +',' + str(location['longitude']) + ',' + str(result['class']))
+            detected_lat.append(location['latitude'])
+            detected_lng.append(location['longitude'])
     else:
         break
 
 cap.release()
-
+do = dt.assign(lat=detected_lat, lng=detected_lng)
+do.to_csv('detect_location.csv', encoding='utf-8', index=False)
 
 
 
